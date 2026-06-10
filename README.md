@@ -10,14 +10,7 @@ This project monitors your workspace environment in real time and classifies it 
 
 The system reads four environmental parameters every 2 seconds, runs on-device inference, and streams results to a live web dashboard with colour-coded status indicators.
 
----
 
-## 👥 Team Members
-
-
-**Course:** Embedded AI
-
----
 
 ## 🔧 Hardware Used
 
