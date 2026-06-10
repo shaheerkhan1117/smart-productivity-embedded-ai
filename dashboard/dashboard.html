@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Environment Monitor</title>
+<link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Rajdhani:wght@300;500;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg:        #080c10;
+    --panel:     #0d1520;
+    --border:    #1a2a3a;
+    --good:      #00ff88;
+    --bad:       #ff3355;
+    --moderate:  #ffaa00;
+    --waiting:   #4488aa;
+    --text:      #c8dde8;
+    --dim:       #4a6070;
+    --accent:    #00aaff;
+  }
+
+  * { margin:0; padding:0; box-sizing:border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Rajdhani', sans-serif;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 30px 20px;
+    background-image:
+      radial-gradient(ellipse 80% 50% at 50% -10%, rgba(0,170,255,0.07) 0%, transparent 70%),
+      repeating-linear-gradient(0deg, transparent, transparent 39px, rgba(26,42,58,0.4) 40px),
+      repeating-linear-gradient(90deg, transparent, transparent 39px, rgba(26,42,58,0.4) 40px);
+  }
+
+  header {
+    text-align: center;
+    margin-bottom: 36px;
+  }
+  header h1 {
+    font-size: 2rem;
+    font-weight: 700;
+    letter-spacing: 0.25em;
+    text-transform: uppercase;
+    color: var(--accent);
+    text-shadow: 0 0 20px rgba(0,170,255,0.4);
+  }
+  header p {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 0.72rem;
+    color: var(--dim);
+    letter-spacing: 0.15em;
+    margin-top: 4px;
+  }
+
+  /* ── Status Card ── */
+  .status-card {
+    width: 100%;
+    max-width: 640px;
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 36px 28px;
+    text-align: center;
+    position: relative;
+    background: var(--panel);
+    margin-bottom: 24px;
+    transition: border-color 0.4s, box-shadow 0.4s;
+  }
+  .status-card.good    { border-color: var(--good);     box-shadow: 0 0 30px rgba(0,255,136,0.12); }
+  .status-card.bad     { border-color: var(--bad);      box-shadow: 0 0 30px rgba(255,51,85,0.12); }
+  .status-card.moderate{ border-color: var(--moderate); box-shadow: 0 0 30px rgba(255,170,0,0.12); }
+  .status-card.waiting { border-color: var(--waiting);  box-shadow: none; }
+
+  .status-label {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 0.65rem;
+    letter-spacing: 0.3em;
+    color: var(--dim);
+    text-transform: uppercase;
+    margin-bottom: 10px;
+  }
+  .status-text {
+    font-size: 2.6rem;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    transition: color 0.4s;
+  }
+  .good     .status-text { color: var(--good);     text-shadow: 0 0 18px rgba(0,255,136,0.5); }
+  .bad      .status-text { color: var(--bad);      text-shadow: 0 0 18px rgba(255,51,85,0.5); }
+  .moderate .status-text { color: var(--moderate); text-shadow: 0 0 18px rgba(255,170,0,0.5); }
+  .waiting  .status-text { color: var(--waiting); }
+
+  .reason-text {
+    margin-top: 10px;
+    font-size: 1.05rem;
+    font-weight: 300;
+    color: var(--dim);
+    letter-spacing: 0.08em;
+  }
+
+  /* blinking dot */
+  .live-dot {
+    display: inline-block;
+    width: 7px; height: 7px;
+    border-radius: 50%;
+    background: var(--good);
+    margin-right: 6px;
+    animation: blink 1.2s infinite;
+    vertical-align: middle;
+  }
+  @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.2} }
+
+  /* ── Sensor Grid ── */
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 14px;
+    width: 100%;
+    max-width: 640px;
+    margin-bottom: 24px;
+  }
+  @media(min-width:520px){ .grid{ grid-template-columns: repeat(4,1fr); } }
+
+  .tile {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 18px 14px;
+    text-align: center;
+  }
+  .tile-label {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 0.6rem;
+    letter-spacing: 0.25em;
+    color: var(--dim);
+    text-transform: uppercase;
+    margin-bottom: 8px;
+  }
+  .tile-value {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 1.45rem;
+    color: var(--accent);
+    transition: color 0.3s;
+  }
+  .tile-unit {
+    font-size: 0.65rem;
+    color: var(--dim);
+    margin-top: 3px;
+    letter-spacing: 0.1em;
+  }
+
+  /* ── Model row ── */
+  .model-row {
+    width: 100%;
+    max-width: 640px;
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 16px 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 24px;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+  .model-item { text-align: center; flex: 1; }
+  .model-item .lbl {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 0.6rem;
+    letter-spacing: 0.2em;
+    color: var(--dim);
+    text-transform: uppercase;
+    margin-bottom: 5px;
+  }
+  .model-item .val {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 1.1rem;
+    color: var(--text);
+    text-transform: uppercase;
+  }
+
+  /* confidence bar */
+  .conf-bar-bg {
+    width: 100%;
+    height: 5px;
+    background: var(--border);
+    border-radius: 3px;
+    margin-top: 6px;
+    overflow: hidden;
+  }
+  .conf-bar-fill {
+    height: 100%;
+    background: var(--accent);
+    border-radius: 3px;
+    transition: width 0.5s ease;
+  }
+
+  /* footer */
+  footer {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 0.6rem;
+    color: var(--dim);
+    letter-spacing: 0.15em;
+    text-align: center;
+  }
+  #last-update { color: var(--dim); }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>⬡ Environment Monitor</h1>
+  <p><span class="live-dot"></span>LIVE · ARDUINO NANO 33 BLE · COM7</p>
+</header>
+
+<!-- Status -->
+<div class="status-card waiting" id="status-card">
+  <div class="status-label">Work Environment</div>
+  <div class="status-text" id="env-text">Waiting…</div>
+  <div class="reason-text" id="reason-text">Connecting to Arduino…</div>
+</div>
+
+<!-- Sensors -->
+<div class="grid">
+  <div class="tile">
+    <div class="tile-label">Temperature</div>
+    <div class="tile-value" id="temp">--</div>
+    <div class="tile-unit">°C</div>
+  </div>
+  <div class="tile">
+    <div class="tile-label">Humidity</div>
+    <div class="tile-value" id="humidity">--</div>
+    <div class="tile-unit">%</div>
+  </div>
+  <div class="tile">
+    <div class="tile-label">Pressure</div>
+    <div class="tile-value" id="pressure">--</div>
+    <div class="tile-unit">kPa</div>
+  </div>
+  <div class="tile">
+    <div class="tile-label">Noise Level</div>
+    <div class="tile-value" id="noise">--</div>
+    <div class="tile-unit">raw</div>
+  </div>
+</div>
+
+<!-- Model -->
+<div class="model-row">
+  <div class="model-item">
+    <div class="lbl">ML Prediction</div>
+    <div class="val" id="model">--</div>
+  </div>
+  <div class="model-item" style="flex:2">
+    <div class="lbl">Confidence</div>
+    <div class="val" id="confidence">--</div>
+    <div class="conf-bar-bg"><div class="conf-bar-fill" id="conf-bar" style="width:0%"></div></div>
+  </div>
+</div>
+
+<footer>
+  Last update: <span id="last-update">--</span> &nbsp;·&nbsp; refreshing every 2 s
+</footer>
+
+<script>
+  async function fetchData() {
+    try {
+      const res = await fetch('http://localhost:5000/data');
+      if (!res.ok) throw new Error('no data');
+      const d = await res.json();
+
+      // Status card
+      const card = document.getElementById('status-card');
+      card.className = 'status-card ' + (d.status || 'waiting');
+      document.getElementById('env-text').textContent    = d.environment || '…';
+      document.getElementById('reason-text').textContent = d.reason      || '';
+
+      // Sensors
+      document.getElementById('temp').textContent     = d.temperature !== '--' ? parseFloat(d.temperature).toFixed(1) : '--';
+      document.getElementById('humidity').textContent = d.humidity    !== '--' ? parseFloat(d.humidity).toFixed(1)    : '--';
+      document.getElementById('pressure').textContent = d.pressure    !== '--' ? parseFloat(d.pressure).toFixed(2)   : '--';
+      document.getElementById('noise').textContent    = d.noise       !== '--' ? parseFloat(d.noise).toFixed(0)      : '--';
+
+      // Model
+      document.getElementById('model').textContent      = d.model      || '--';
+      const conf = parseFloat(d.confidence) || 0;
+      document.getElementById('confidence').textContent = d.confidence !== '--' ? (conf * 100).toFixed(0) + '%' : '--';
+      document.getElementById('conf-bar').style.width   = (conf * 100) + '%';
+
+      document.getElementById('last-update').textContent = new Date().toLocaleTimeString();
+    } catch {
+      document.getElementById('env-text').textContent    = 'Disconnected';
+      document.getElementById('reason-text').textContent = 'Make sure arduino_server.py is running';
+      document.getElementById('status-card').className   = 'status-card waiting';
+    }
+  }
+
+  fetchData();
+  setInterval(fetchData, 2000);
+</script>
+</body>
+</html>
