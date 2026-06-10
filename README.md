@@ -14,11 +14,6 @@ The system reads four environmental parameters every 2 seconds, runs on-device i
 
 ## 👥 Team Members
 
-| Name | Role |
-|------|------|
-| Shaheer Khan | Project Lead & Embedded Developer |
-| Fatiqa Munir | ML Model Training & Edge Impulse |
-| Usama Sikandar | Dashboard & Serial Communication |
 
 **Course:** Embedded AI
 
@@ -61,15 +56,6 @@ The system reads four environmental parameters every 2 seconds, runs on-device i
 
 ---
 
-## 🚦 Classification Logic
-
-| Priority | Condition | Result |
-|----------|-----------|--------|
-| 1 | Raw noise > hardware threshold | 🔴 BAD — Too Noisy |
-| 2 | Model predicts `hot` ≥ 70% confidence | 🔴 BAD — Too Hot |
-| 3 | Model predicts `noise` ≥ 70% confidence | 🔴 BAD — Too Noisy |
-| 4 | Model predicts `normal` ≥ 70% confidence | 🟢 GOOD FOR WORK |
-| 5 | Confidence below 70% | 🟡 MODERATE |
 
 ---
 
